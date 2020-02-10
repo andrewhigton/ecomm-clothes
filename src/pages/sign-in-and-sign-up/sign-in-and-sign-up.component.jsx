@@ -1,12 +1,12 @@
 import React from 'react';
-import './sign-in-sign-up.styles.scss';
+import './sign-in-and-sign-up.styles.scss';
 import SignIn from '../../components/sign-in/sign-in.component';
 import SignUp from '../../components/sign-up/sign-up.component';
 
-const SignInAndSignUpPage = () => (
+const SignInAndSignUpPage = (props) => (
 	<div className='sign-in-sign-up'>
-		<SignIn />
-		<SignUp />
+		<SignIn currentUser={props.currentUser}/>
+		<SignUp />		
 	</div>
 )
 

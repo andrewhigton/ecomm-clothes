@@ -1,32 +1,83 @@
-import React from 'react';
-import { Switch, Route, Redirect } from 'react-router-dom';
+// questions
+// when to use () and not {}? {} for rendering javascript, () for returning elements without js 
+import React, { Component } from 'react';
+import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom';
 import { connect } from 'react-redux';
-import './App.css';
-import HomePage from './page/homepage/homepage.component';
-import ShopPage from './page/shop/shop.component';
-import SignInAndSignUpPage from './page/sign-in-sign-up/sign-in-sign-up.component';
+import SignInAndSignUpPage from './pages/sign-in-and-sign-up/sign-in-and-sign-up.component'; 
+import HomePage from './pages/homepage/homepage.component';
+import ShopPage from './pages/shop/shop.component';
 import Header from './components/header/header.component';
 import { auth, createUserProfileDocument } from './firebase/firebase.utils';
 import { setCurrentUser } from './redux/user/user.actions';
+import { selectCurrentUser } from './redux/user/user.selectors';
+import { createStructuredSelector } from 'reselect';
+import CheckoutPage from './pages/checkout/checkout.component';
+import './App.css';
 
-class App extends React.Component {
+class App extends Component {
+    //removed this for redux
+  //   constructor(props) {
+  //   super(props);
+
+  //   this.state = {
+  //     currentUser: null
+  //   }
+  // }
+
+
+
+// this fetches the users on luanch
+// componentDidMount() {
+//   fetch('http://localhost:3000/')
+//   .then(response => response.json())
+//   .then(data => {
+//       //console.log(data)
+//       setCurrentUser({
+//               id: data.id,
+//               data
+//     })
+//   })
+// }
+
+  // this awaits conf from firebase, then sets the currentUser 
+  //how would you do this? how to get the info from the signin?
+  //its a separate process. on componentdidmount, it checks in with the db, if true, we have a sign in
+  //so in firebase, it logs as a user as true. how would ps do this? 
+  //then you check on app.js separately, I believe, whether the user is logged in. 
+  //if so, you update setCurrentuser from there. 
+  //but, i would wiat until you come across this in postgress studies. or Mongo. 
+  //otherwise, you will waste valuable time    
+
   unsubscribeFromAuth = null;
 
   componentDidMount() {
-    const { setCurrentUser } = this.props;
+      const { setCurrentUser } = this.props;
 
-    this.unsubscribeFromAuth = auth.onAuthStateChanged(async userAuth => {
+      this.unsubscribeFromAuth = auth.onAuthStateChanged(async userAuth => {
+      // this.setState({ currentUser: user });
+            // console.log(user);    
       if (userAuth) {
         const userRef = await createUserProfileDocument(userAuth);
 
+        //here, if true, you also set state in the app 
         userRef.onSnapshot(snapShot => {
           setCurrentUser({
-            id: snapShot.id,
-            ...snapShot.data()
-          });
+              id: snapShot.id,
+              ...snapShot.data()
+            })
+          // this.setState({
+          //   currentUser: {
+          //     id: snapShot.id,
+          //     ...snapShot.data()
+          //   }
+          // }
+          // , () => {
+          //   console.log(this.state);
+          // });
         });
       }
-
+      //tihs resets it to null when logged out, because userAuth is null
+      //this.setState({ currentUser: userAuth });
       setCurrentUser(userAuth);
     });
   }
@@ -35,39 +86,43 @@ class App extends React.Component {
     this.unsubscribeFromAuth();
   }
 
-  render() {
+    render () {
     return (
-      <div>
+    	<div>
+    		<BrowserRouter>
         <Header />
-        <Switch>
-          <Route exact path='/' component={HomePage} />
-          <Route path='/shop' component={ShopPage} />
-          <Route
-            exact
-            path='/signin'
-            render={() =>
-              this.props.currentUser ? (
-                <Redirect to='/' />
-              ) : (
-                <SignInAndSignUpPage />
-              )
-            }
-          />
-        </Switch>
-      </div>
-    );
-  }
+          <Switch>
+    			<Route exact path='/' component={HomePage} />
+    			<Route path='/shop' component={ShopPage} />
+          <Route exact path='/checkout' component={CheckoutPage} />
+          <Route exact path='/signin' render={() => this.props.currentUser ? (<Redirect to='/' />) : 
+            (<SignInAndSignUpPage />)
+            // {...props} currentUser={this.state.currentUser}
+          }/>
+    		</Switch>
+    		</BrowserRouter>
+    	</div>
+		)
+	}
 }
 
-const mapStateToProps = ({ user }) => ({
-  currentUser: user.currentUser
-});
+//earlier
+// const mapStateToProps = ({ user }) => ({
+//   currentUser: user.currentUser
+// })
 
+const mapStateToProps = createStructuredSelector({
+  currentUser: selectCurrentUser
+})
+
+
+//here you use dispatch to pass the action object, setCurrenUser, with the new user, to the reducers
+//the reducers work out which one is needed, then pass that along to the store
 const mapDispatchToProps = dispatch => ({
   setCurrentUser: user => dispatch(setCurrentUser(user))
-});
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(App);
+})
+  
+export default connect(mapStateToProps, mapDispatchToProps)(App);
+// <Route exact path='/signin' render={() => this.props.currentUser ? 
+//                 (<Redirect to ='/' />
+//                 ) : (
