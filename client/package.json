@@ -6,7 +6,7 @@
   "dependencies": {
     "axios": "^0.19.2",
     "firebase": "^7.1.0",
-    "knex": "^0.20.3",
+    "knex": "^2.4.0",
     "logger": "0.0.1",
     "node": "^12.11.0",
     "node-sass": "^4.12.0",
